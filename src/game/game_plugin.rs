@@ -32,6 +32,7 @@ impl Plugin for GamePlugin {
                 PhysicsDebugPlugin::default(),
                 InputManagerPlugin::<player::PlayerAction>::default(),
                 demo_plugin::DemoPlugin,
-            ));
+            ))
+            .insert_resource(Gravity(Vec2::NEG_Y * 100.0));
     }
 }

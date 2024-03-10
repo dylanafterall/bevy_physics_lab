@@ -6,6 +6,7 @@ use bevy::prelude::*;
 pub enum DemoState {
     #[default]
     Home,
+    Colliders,
 }
 
 // events ----------------------------------------------------------------------
@@ -22,7 +23,8 @@ pub fn handle_edit_demo_state(
 ) {
     for _ in read_edit_demo_state.read() {
         match *current_demo_state.get() {
-            DemoState::Home => next_demo_state.set(DemoState::Home),
+            DemoState::Home => next_demo_state.set(DemoState::Colliders),
+            DemoState::Colliders => next_demo_state.set(DemoState::Home),
         }
     }
 }

@@ -10,6 +10,14 @@ pub struct DemoPlugin;
 impl Plugin for DemoPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(DemoState::Home), home_demo::spawn_home_demo)
-            .add_systems(OnExit(DemoState::Home), home_demo::despawn_home_demo);
+            .add_systems(OnExit(DemoState::Home), home_demo::despawn_home_demo)
+            .add_systems(
+                OnEnter(DemoState::Colliders),
+                colliders_demo::spawn_colliders_demo,
+            )
+            .add_systems(
+                OnExit(DemoState::Colliders),
+                colliders_demo::despawn_colliders_demo,
+            );
     }
 }
