@@ -1,10 +1,17 @@
-use bevy::prelude::*;
+use crate::game::game_plugin::GravityFactor;
+
+use bevy::{prelude::*, utils::Duration};
 use bevy_xpbd_2d::prelude::*;
 
 // components ------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 #[derive(Component)]
 pub struct CollidersDemo;
+
+#[derive(Component)]
+pub struct CollidersTimer {
+    pub timer: Timer,
+}
 
 // systems ---------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -28,6 +35,11 @@ pub fn spawn_colliders_demo(mut commands: Commands) {
                 Collider::rectangle(10.0, 100.0),
                 TransformBundle::from_transform(Transform::from_xyz(95.0, 45.0, 0.0)),
             ));
+            children.spawn((
+                Name::new("CollidersTopWall"),
+                Collider::rectangle(180.0, 10.0),
+                TransformBundle::from_transform(Transform::from_xyz(0.0, 90.0, 0.0)),
+            ));
         });
 
     commands.spawn((
@@ -43,7 +55,7 @@ pub fn spawn_colliders_demo(mut commands: Commands) {
         Name::new("CollidersEllipse"),
         CollidersDemo,
         RigidBody::Dynamic,
-        Collider::ellipse(3.0, 5.0),
+        Collider::ellipse(5.0, 7.0),
         TransformBundle::from_transform(Transform::from_xyz(-60.0, 0.0, 0.0)),
     ));
 
@@ -51,7 +63,8 @@ pub fn spawn_colliders_demo(mut commands: Commands) {
         Name::new("CollidersRoundRectangle"),
         CollidersDemo,
         RigidBody::Dynamic,
-        Collider::round_rectangle(8.0, 4.0, 1.5),
+        Collider::round_rectangle(9.0, 5.0, 1.5),
+        GravityScale(-1.0),
         TransformBundle::from_transform(Transform::from_xyz(-40.0, 0.0, 0.0)),
     ));
 
@@ -60,8 +73,8 @@ pub fn spawn_colliders_demo(mut commands: Commands) {
         CollidersDemo,
         RigidBody::Dynamic,
         Collider::triangle(
-            Vec2::new(-4.0, -5.0),
-            Vec2::new(4.0, -5.0),
+            Vec2::new(-5.0, -5.0),
+            Vec2::new(5.0, -5.0),
             Vec2::new(0.0, 5.0),
         ),
         TransformBundle::from_transform(Transform::from_xyz(40.0, 0.0, 0.0)),
@@ -75,6 +88,14 @@ pub fn spawn_colliders_demo(mut commands: Commands) {
         LockedAxes::ROTATION_LOCKED,
         TransformBundle::from_transform(Transform::from_xyz(60.0, 0.0, 0.0)),
     ));
+
+    commands.spawn((
+        Name::new("CollidersTimer"),
+        CollidersDemo,
+        CollidersTimer {
+            timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+        },
+    ));
 }
 
 pub fn despawn_colliders_demo(
@@ -83,5 +104,24 @@ pub fn despawn_colliders_demo(
 ) {
     for demo_entity in demo_query.iter() {
         commands.entity(demo_entity).despawn_recursive();
+    }
+}
+
+pub fn rotate_gravity(
+    time: Res<Time>,
+    mut timer_query: Query<&mut CollidersTimer>,
+    mut gravity: ResMut<Gravity>,
+    g_factor: Res<GravityFactor>,
+) {
+    let mut colliders_timer = timer_query.single_mut();
+    colliders_timer.timer.tick(time.delta());
+
+    if colliders_timer.timer.just_finished() {
+        gravity.0 = match gravity.0.normalize() {
+            Vec2::NEG_Y => Vec2::X * g_factor.factor,
+            Vec2::X => Vec2::Y * g_factor.factor,
+            Vec2::Y => Vec2::NEG_X * g_factor.factor,
+            _ => Vec2::NEG_Y * g_factor.factor,
+        }
     }
 }

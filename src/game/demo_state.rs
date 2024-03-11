@@ -7,6 +7,8 @@ pub enum DemoState {
     #[default]
     Home,
     Colliders,
+    ConveyorBelt,
+    Magnet,
 }
 
 // events ----------------------------------------------------------------------
@@ -24,7 +26,9 @@ pub fn handle_edit_demo_state(
     for _ in read_edit_demo_state.read() {
         match *current_demo_state.get() {
             DemoState::Home => next_demo_state.set(DemoState::Colliders),
-            DemoState::Colliders => next_demo_state.set(DemoState::Home),
+            DemoState::Colliders => next_demo_state.set(DemoState::ConveyorBelt),
+            DemoState::ConveyorBelt => next_demo_state.set(DemoState::Magnet),
+            DemoState::Magnet => next_demo_state.set(DemoState::Home),
         }
     }
 }

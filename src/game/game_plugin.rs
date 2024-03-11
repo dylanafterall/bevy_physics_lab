@@ -33,6 +33,27 @@ impl Plugin for GamePlugin {
                 InputManagerPlugin::<player::PlayerAction>::default(),
                 demo_plugin::DemoPlugin,
             ))
-            .insert_resource(Gravity(Vec2::NEG_Y * 100.0));
+            .insert_resource(GravityFactor { factor: 100.0 })
+            .add_systems(PostStartup, setup_gravity)
+            .add_systems(OnExit(demo_state::DemoState::Colliders), setup_gravity);
+        // .insert_resource(SubstepCount(30))
+        // .insert_resource(SleepingThreshold {
+        //     linear: 0.1,
+        //     angular: 0.2
+        // })
+        // .insert_resource(Gravity(Vec2::NEG_Y * 100.0));
     }
+}
+
+// resources -------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+#[derive(Resource)]
+pub struct GravityFactor {
+    pub factor: f32,
+}
+
+// systems ---------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+fn setup_gravity(mut gravity: ResMut<Gravity>, g_factor: Res<GravityFactor>) {
+    gravity.0 = Vec2::NEG_Y * g_factor.factor;
 }

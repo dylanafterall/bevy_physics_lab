@@ -89,3 +89,47 @@ pub fn handle_player_input(
         write_edit_demo.send(EditDemoState);
     };
 }
+
+// VARIOUS MEANS OF ACCESSING COLLISIONS ---------------------------------------
+// -----------------------------------------------------------------------------
+// get player collisions by querying for its CollidingEntities COMPONENT
+pub fn _print_player_collisions(
+    collision_query: Query<(Entity, &CollidingEntities), With<Player>>,
+) {
+    for (player_entity, colliding_entities) in &collision_query {
+        println!(
+            "{:?} is colliding with the following entities: {:?}",
+            player_entity, colliding_entities
+        );
+    }
+}
+
+// can access ALL collisions via 3 EVENTS: Collision, CollisionStarted, CollisionEnded
+pub fn _print_all_collisions(mut collision_event_reader: EventReader<Collision>) {
+    for Collision(contacts) in collision_event_reader.read() {
+        println!(
+            "Entities {:?} and {:?} are colliding",
+            contacts.entity1, contacts.entity2,
+        );
+    }
+}
+
+// get player collisions by searching the Collisions RESOURCE
+pub fn _collisions_test(player_query: Query<Entity, With<Player>>, collisions: Res<Collisions>) {
+    let player = player_query.single();
+    for player_collision in collisions.collisions_with_entity(player) {
+        println!("{:?}", player_collision);
+    }
+}
+
+// PostProcessCollisions: schedule where you can add systems to filter or modify collisions using the Collisions resource
+// ------------------------------------------------------
+// .add_systems(PostProcessCollisions, filter_collisions)
+// ------------------------------------------------------
+// fn filter_collisions(mut collisions: ResMut<Collisions>, query: Query<(), With<Invulnerable>>) {
+//     // Remove collisions where one of the colliders has an `Invulnerable` component.
+//     // In a real project, this could be done more efficiently with collision layers.
+//     collisions.retain(|contacts| {
+//         !query.contains(contacts.entity1) && !query.contains(contacts.entity2)
+//     });
+// }
