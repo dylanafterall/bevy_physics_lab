@@ -23,22 +23,30 @@ pub fn spawn_colliders_demo(mut commands: Commands) {
             RigidBody::Static,
             Collider::rectangle(180.0, 10.0),
             TransformBundle::from_transform(Transform::from_xyz(0.0, -50.0, 0.0)),
+            DebugRender {
+                axis_lengths: None,
+                collider_color: Some(Color::WHITE),
+                ..default()
+            },
         ))
         .with_children(|children| {
             children.spawn((
                 Name::new("CollidersLeftWall"),
-                Collider::rectangle(10.0, 100.0),
-                TransformBundle::from_transform(Transform::from_xyz(-95.0, 45.0, 0.0)),
+                Collider::rectangle(10.0, 110.0),
+                TransformBundle::from_transform(Transform::from_xyz(-95.0, 50.0, 0.0)),
+                DebugRender::default().with_collider_color(Color::WHITE),
             ));
             children.spawn((
                 Name::new("CollidersRightWall"),
-                Collider::rectangle(10.0, 100.0),
-                TransformBundle::from_transform(Transform::from_xyz(95.0, 45.0, 0.0)),
+                Collider::rectangle(10.0, 110.0),
+                TransformBundle::from_transform(Transform::from_xyz(95.0, 50.0, 0.0)),
+                DebugRender::default().with_collider_color(Color::WHITE),
             ));
             children.spawn((
                 Name::new("CollidersTopWall"),
                 Collider::rectangle(180.0, 10.0),
-                TransformBundle::from_transform(Transform::from_xyz(0.0, 90.0, 0.0)),
+                TransformBundle::from_transform(Transform::from_xyz(0.0, 100.0, 0.0)),
+                DebugRender::default().with_collider_color(Color::WHITE),
             ));
         });
 

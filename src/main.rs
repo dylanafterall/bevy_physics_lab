@@ -40,6 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ))
         // local plugins
         .add_plugins((game_plugin::GamePlugin,))
+        .insert_resource(ClearColor(Color::BLACK))
         .run();
 
     Ok(())

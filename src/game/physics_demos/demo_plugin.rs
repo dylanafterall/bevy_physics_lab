@@ -32,17 +32,18 @@ impl Plugin for DemoPlugin {
             .add_systems(OnExit(DemoState::Magnet), magnet_demo::despawn_magnet_demo)
             .add_systems(
                 Update,
-                colliders_demo::rotate_gravity.run_if(in_state(DemoState::Colliders)),
+                (
+                    colliders_demo::rotate_gravity.run_if(in_state(DemoState::Colliders)),
+                    conveyor_belt_demo::handle_belt_collisions
+                        .run_if(in_state(DemoState::ConveyorBelt)),
+                    conveyor_belt_demo::spawn_and_despawn_blocks
+                        .run_if(in_state(DemoState::ConveyorBelt)),
+                    magnet_demo::toggle_magnet.run_if(in_state(DemoState::Magnet)),
+                ),
             )
             .add_systems(
                 PostProcessCollisions,
-                (
-                    conveyor_belt_demo::handle_belt_collisions
-                        .run_if(in_state(DemoState::ConveyorBelt)),
-                    conveyor_belt_demo::handle_one_way_collisions
-                        .after(conveyor_belt_demo::handle_belt_collisions)
-                        .run_if(in_state(DemoState::ConveyorBelt)),
-                ),
+                (conveyor_belt_demo::one_way_platform.run_if(in_state(DemoState::ConveyorBelt)),),
             );
     }
 }

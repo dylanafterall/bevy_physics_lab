@@ -38,6 +38,17 @@ pub struct Holder {
     pub is_holding: bool,
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Default, Component, Reflect)]
+pub enum PassThroughOneWayPlatform {
+    #[default]
+    /// Passes through a `OneWayPlatform` if the contact normal is in line with the platform's local-space up vector
+    ByNormal,
+    /// Always passes through a `OneWayPlatform`, temporarily set this to allow an actor to jump down through a platform
+    Always,
+    /// Never passes through a `OneWayPlatform`
+    Never,
+}
+
 // systems ---------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 pub fn spawn_player(mut commands: Commands) {
@@ -46,10 +57,11 @@ pub fn spawn_player(mut commands: Commands) {
         Player,
         Holder { is_holding: false },
         InputManagerBundle::with_map(PlayerAction::default_input_map()),
+        PassThroughOneWayPlatform::ByNormal,
         RigidBody::Dynamic,
         Collider::capsule(5.0, 5.0),
         GravityScale(0.0),
-        LinearDamping(0.25),
+        LinearDamping(0.6),
         AngularDamping(0.25),
         DebugRender::default().with_collider_color(Color::RED),
     ));
@@ -87,6 +99,26 @@ pub fn handle_player_input(
 
     if action_state.just_pressed(&PlayerAction::NextDemo) {
         write_edit_demo.send(EditDemoState);
+    };
+}
+
+pub fn pass_through_one_way_platform(
+    mut commands: Commands,
+    action_query: Query<&ActionState<PlayerAction>, With<Player>>,
+    mut player_query: Query<(Entity, &mut PassThroughOneWayPlatform), With<Player>>,
+) {
+    let (entity, mut pass_through_one_way_platform) = player_query.single_mut();
+
+    let action_state = action_query.single();
+
+    if action_state.pressed(&PlayerAction::Grab) {
+        *pass_through_one_way_platform = PassThroughOneWayPlatform::Always;
+
+        // Wake up body when it's allowed to drop down.
+        // Otherwise it won't fall because gravity isn't simulated.
+        commands.entity(entity).remove::<Sleeping>();
+    } else {
+        *pass_through_one_way_platform = PassThroughOneWayPlatform::ByNormal;
     };
 }
 

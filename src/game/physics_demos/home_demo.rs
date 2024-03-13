@@ -15,6 +15,11 @@ pub fn spawn_home_demo(mut commands: Commands) {
         RigidBody::Static,
         Collider::rectangle(150.0, 10.0),
         TransformBundle::from_transform(Transform::from_xyz(0.0, -50.0, 0.0)),
+        DebugRender {
+            axis_lengths: None,
+            collider_color: Some(Color::WHITE),
+            ..default()
+        },
     ));
 }
 

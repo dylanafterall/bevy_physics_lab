@@ -19,6 +19,7 @@ impl Plugin for GamePlugin {
                 (
                     demo_state::handle_edit_demo_state,
                     player::handle_player_input,
+                    player::pass_through_one_way_platform,
                 ),
             )
             .add_systems(
