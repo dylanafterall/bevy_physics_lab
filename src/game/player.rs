@@ -67,6 +67,12 @@ pub fn spawn_player(mut commands: Commands) {
     ));
 }
 
+pub fn despawn_player(mut commands: Commands, player_query: Query<Entity, With<Player>>) {
+    for player_entity in player_query.iter() {
+        commands.entity(player_entity).despawn_recursive();
+    }
+}
+
 pub fn handle_player_input(
     action_query: Query<&ActionState<PlayerAction>, With<Player>>,
     mut player_query: Query<(&mut ExternalImpulse, &mut ExternalAngularImpulse), With<Player>>,
@@ -97,7 +103,7 @@ pub fn handle_player_input(
         println!("Grabbing");
     };
 
-    if action_state.just_pressed(&PlayerAction::NextDemo) {
+    if action_state.just_released(&PlayerAction::NextDemo) {
         write_edit_demo.send(EditDemoState);
     };
 }
