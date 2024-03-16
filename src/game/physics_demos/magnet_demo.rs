@@ -3,29 +3,40 @@ use crate::game::player::Player;
 use bevy::{prelude::*, utils::Duration};
 use bevy_xpbd_2d::prelude::*;
 
+// polarity conventions --------------------------------------------------------
+// -----------------------------------------------------------------------------
+const POS_POL_COLOR: Color = Color::RED;
+const POS_POL_COEFF: f32 = 1.0;
+
+const NEG_POL_COLOR: Color = Color::BLUE;
+const NEG_POL_COEFF: f32 = -1.0;
+
+const NEUT_POL_COLOR: Color = Color::WHITE;
+const NEUT_POL_COEFF: f32 = 0.0;
+
+const MAGNET_SENSOR_COL: Color = Color::rgba(1.0, 0.65, 0.0, 0.05);
+
+pub enum MagnetPolarity {
+    Positive,
+    Negative,
+    Neutral,
+}
+
 // components ------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 #[derive(Component)]
 pub struct MagnetDemo;
 
-// color convention for magnet charges:
-// Positive = RED, Negative = BLUE, 0.0 = WHITE
-pub enum MagnetStatus {
-    Positive,
-    Negative,
-    Off,
-}
-
 #[derive(Component)]
 pub struct Magnet {
-    // charge_abs should always be positive
-    pub charge_abs: f32,
-    pub status: MagnetStatus,
+    // abs_charge should always be >= 0.0
+    pub abs_charge: f32,
+    pub polarity: MagnetPolarity,
 }
 
 #[derive(Component)]
 pub struct OscillatingMagnet {
-    pub timer: Timer,
+    pub osc_timer: Timer,
 }
 
 // systems ---------------------------------------------------------------------
@@ -85,26 +96,25 @@ pub fn spawn_magnet_demo(
             Name::new("MagnetCenter"),
             MagnetDemo,
             Magnet {
-                charge_abs: 10_000.0,
-                status: MagnetStatus::Off,
+                abs_charge: 10_000.0,
+                polarity: MagnetPolarity::Neutral,
             },
             OscillatingMagnet {
-                timer: Timer::new(Duration::from_secs(10), TimerMode::Repeating),
+                osc_timer: Timer::new(Duration::from_secs(10), TimerMode::Repeating),
             },
             RigidBody::Dynamic,
             LockedAxes::ALL_LOCKED,
             Collider::circle(15.0),
             Restitution::new(0.0).with_combine_rule(CoefficientCombine::Min),
             TransformBundle::from_transform(Transform::from_xyz(0.0, 0.0, 0.0)),
-            DebugRender::default().with_collider_color(Color::WHITE),
+            DebugRender::default().with_collider_color(NEUT_POL_COLOR),
         ))
         .with_children(|children| {
             children.spawn((
                 Collider::circle(95.0),
                 Sensor,
                 DebugRender {
-                    // semi-transparent Color::ORANGE
-                    collider_color: Some(Color::rgba(1.0, 0.65, 0.0, 0.1)),
+                    collider_color: Some(MAGNET_SENSOR_COL),
                     ..default()
                 },
             ));
@@ -112,14 +122,14 @@ pub fn spawn_magnet_demo(
 
     // spawn a bunch of small, dynamic magnets ---------------------------------
     let mut magnet_small =
-        |x_pos: f32, y_pos: f32, charge: f32, status: MagnetStatus, color: Color| {
+        |x_pos: f32, y_pos: f32, charge: f32, polarity: MagnetPolarity, color: Color| {
             commands
                 .spawn((
                     Name::new("MagnetSmall"),
                     MagnetDemo,
                     Magnet {
-                        charge_abs: charge,
-                        status,
+                        abs_charge: charge,
+                        polarity,
                     },
                     RigidBody::Dynamic,
                     Collider::circle(1.5),
@@ -136,8 +146,7 @@ pub fn spawn_magnet_demo(
                         Collider::circle(4.5),
                         Sensor,
                         DebugRender {
-                            // semi-transparent Color::ORANGE
-                            collider_color: Some(Color::rgba(1.0, 0.65, 0.0, 0.1)),
+                            collider_color: Some(MAGNET_SENSOR_COL),
                             ..default()
                         },
                     ));
@@ -145,10 +154,22 @@ pub fn spawn_magnet_demo(
         };
 
     for x in (-88..89).step_by(8) {
-        magnet_small(x as f32, 30.0, 15.0, MagnetStatus::Negative, Color::BLUE);
+        magnet_small(
+            x as f32,                 // x coord
+            30.0,                     // y coord
+            15.0,                     // abs_charge
+            MagnetPolarity::Negative, // polarity
+            NEG_POL_COLOR,            // debug render color
+        );
     }
     for x in (-88..89).step_by(8) {
-        magnet_small(x as f32, -30.0, 15.0, MagnetStatus::Positive, Color::RED);
+        magnet_small(
+            x as f32,
+            -30.0,
+            15.0,
+            MagnetPolarity::Positive,
+            POS_POL_COLOR,
+        );
     }
 }
 
@@ -172,25 +193,25 @@ pub fn apply_magnet_forces(
                 if let Ok((j_magnet, j_collider, j_transform, _j_children)) =
                     magnet_query.get(*collider_ent)
                 {
+                    // calculate distance and charges in preparation for force magnitude calc
                     let distance = j_collider.distance_to_point(
                         j_transform.translation.xy(),
                         j_transform.rotation,
                         i_transform.translation.xy(),
                         true,
                     );
-
-                    let i_charge = i_magnet.charge_abs
-                        * match i_magnet.status {
-                            MagnetStatus::Positive => 1.0,
-                            MagnetStatus::Negative => -1.0,
-                            MagnetStatus::Off => 0.0,
+                    // use polarity to determine if magnets will attract / repel / nothing
+                    let i_charge = i_magnet.abs_charge
+                        * match i_magnet.polarity {
+                            MagnetPolarity::Positive => POS_POL_COEFF,
+                            MagnetPolarity::Negative => NEG_POL_COEFF,
+                            MagnetPolarity::Neutral => NEUT_POL_COEFF,
                         };
-
-                    let j_charge = j_magnet.charge_abs
-                        * match j_magnet.status {
-                            MagnetStatus::Positive => 1.0,
-                            MagnetStatus::Negative => -1.0,
-                            MagnetStatus::Off => 0.0,
+                    let j_charge = j_magnet.abs_charge
+                        * match j_magnet.polarity {
+                            MagnetPolarity::Positive => POS_POL_COEFF,
+                            MagnetPolarity::Negative => NEG_POL_COEFF,
+                            MagnetPolarity::Neutral => NEUT_POL_COEFF,
                         };
 
                     let magnitude = i_charge * j_charge / f32::powi(distance, 2);
@@ -213,22 +234,22 @@ pub fn toggle_oscillating_magnets(
     mut magnet_query: Query<(&mut OscillatingMagnet, &mut Magnet, &mut DebugRender)>,
 ) {
     for (mut oscillator, mut magnet, mut render) in magnet_query.iter_mut() {
-        oscillator.timer.tick(time.delta());
+        oscillator.osc_timer.tick(time.delta());
 
-        if oscillator.timer.just_finished() {
-            // cycle the magnet status and set new corresponding color
-            magnet.status = match magnet.status {
-                MagnetStatus::Positive => {
-                    render.collider_color = Some(Color::BLUE);
-                    MagnetStatus::Negative
+        if oscillator.osc_timer.just_finished() {
+            // cycle the magnet polarity and set new corresponding color
+            magnet.polarity = match magnet.polarity {
+                MagnetPolarity::Positive => {
+                    render.collider_color = Some(NEG_POL_COLOR);
+                    MagnetPolarity::Negative
                 }
-                MagnetStatus::Negative => {
-                    render.collider_color = Some(Color::WHITE);
-                    MagnetStatus::Off
+                MagnetPolarity::Negative => {
+                    render.collider_color = Some(NEUT_POL_COLOR);
+                    MagnetPolarity::Neutral
                 }
-                MagnetStatus::Off => {
-                    render.collider_color = Some(Color::RED);
-                    MagnetStatus::Positive
+                MagnetPolarity::Neutral => {
+                    render.collider_color = Some(POS_POL_COLOR);
+                    MagnetPolarity::Positive
                 }
             }
         }

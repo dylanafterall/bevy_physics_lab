@@ -25,6 +25,10 @@ impl Plugin for DemoPlugin {
                 OnEnter(DemoState::Magnet),
                 magnet_demo::spawn_magnet_demo.after(player::spawn_player),
             )
+            .add_systems(
+                OnEnter(DemoState::Destructible),
+                destructible_demo::spawn_destructible_demo.after(player::spawn_player),
+            )
             // OnExit DemoState:: ----------------------------------------------
             .add_systems(OnExit(DemoState::Home), home_demo::despawn_home_demo)
             .add_systems(
@@ -36,6 +40,10 @@ impl Plugin for DemoPlugin {
                 conveyor_belt_demo::despawn_conveyor_belt_demo,
             )
             .add_systems(OnExit(DemoState::Magnet), magnet_demo::despawn_magnet_demo)
+            .add_systems(
+                OnExit(DemoState::Destructible),
+                destructible_demo::despawn_destructible_demo,
+            )
             // Update ----------------------------------------------------------
             .add_systems(
                 Update,
@@ -47,6 +55,8 @@ impl Plugin for DemoPlugin {
                         .run_if(in_state(DemoState::ConveyorBelt)),
                     magnet_demo::apply_magnet_forces.run_if(in_state(DemoState::Magnet)),
                     magnet_demo::toggle_oscillating_magnets.run_if(in_state(DemoState::Magnet)),
+                    destructible_demo::break_destructible_joints
+                        .run_if(in_state(DemoState::Destructible)),
                 ),
             )
             // PostProcessCollisions -------------------------------------------

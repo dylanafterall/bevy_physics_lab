@@ -9,6 +9,7 @@ pub enum DemoState {
     Colliders,
     ConveyorBelt,
     Magnet,
+    Destructible,
 }
 
 // events ----------------------------------------------------------------------
@@ -28,7 +29,8 @@ pub fn handle_edit_demo_state(
             DemoState::Home => next_demo_state.set(DemoState::Colliders),
             DemoState::Colliders => next_demo_state.set(DemoState::ConveyorBelt),
             DemoState::ConveyorBelt => next_demo_state.set(DemoState::Magnet),
-            DemoState::Magnet => next_demo_state.set(DemoState::Home),
+            DemoState::Magnet => next_demo_state.set(DemoState::Destructible),
+            DemoState::Destructible => next_demo_state.set(DemoState::Home),
         }
     }
 }

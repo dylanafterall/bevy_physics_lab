@@ -34,6 +34,7 @@ impl Plugin for GamePlugin {
             .add_systems(OnEnter(DemoState::Colliders), player::spawn_player)
             .add_systems(OnEnter(DemoState::ConveyorBelt), player::spawn_player)
             .add_systems(OnEnter(DemoState::Magnet), player::spawn_player)
+            .add_systems(OnEnter(DemoState::Destructible), player::spawn_player)
             // Exiting DemoState:: ---------------------------------------------
             .add_systems(OnExit(DemoState::Home), player::despawn_player)
             .add_systems(
@@ -42,6 +43,7 @@ impl Plugin for GamePlugin {
             )
             .add_systems(OnExit(DemoState::ConveyorBelt), player::despawn_player)
             .add_systems(OnExit(DemoState::Magnet), player::despawn_player)
+            .add_systems(OnExit(DemoState::Destructible), player::despawn_player)
             // Update ----------------------------------------------------------
             .add_systems(
                 Update,

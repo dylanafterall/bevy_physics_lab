@@ -133,7 +133,7 @@ pub fn spawn_conveyor_belt_demo(mut commands: Commands) {
         Name::new("ConveyorBeltDemoTimer"),
         ConveyorBeltDemo,
         ConveyorBeltDemoTimer {
-            timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+            timer: Timer::new(Duration::from_secs(3), TimerMode::Repeating),
         },
     ));
 }
