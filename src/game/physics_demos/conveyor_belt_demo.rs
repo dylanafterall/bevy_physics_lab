@@ -237,10 +237,9 @@ pub fn one_way_platform(
             // and if it is penetrating us still, continue to allow it to do so.
             if any_penetrating(contacts) {
                 return false;
-            } else {
-                // If it's no longer penetrating us, forget it.
-                one_way_platform.0.remove(&other_entity);
             }
+            // If it's no longer penetrating us, forget it.
+            one_way_platform.0.remove(&other_entity);
         }
 
         match other_colliders_query.get(other_entity) {
