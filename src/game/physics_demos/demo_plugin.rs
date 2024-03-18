@@ -25,9 +25,16 @@ impl Plugin for DemoPlugin {
                 OnEnter(DemoState::Magnet),
                 magnet_demo::spawn_magnet_demo.after(player::spawn_player),
             )
+            .add_systems(OnEnter(DemoState::Joint), joint_demo::spawn_joint_demo)
             .add_systems(
                 OnEnter(DemoState::Destructible),
-                destructible_demo::spawn_destructible_demo.after(player::spawn_player),
+                (
+                    destructible_demo::spawn_destructible_platform,
+                    destructible_demo::spawn_destructible_prismatic_grid,
+                    destructible_demo::spawn_destructible_revolute_grid,
+                    destructible_demo::spawn_destructible_distance_grid,
+                    destructible_demo::spawn_destructible_static_grid,
+                ),
             )
             // OnExit DemoState:: ----------------------------------------------
             .add_systems(OnExit(DemoState::Home), home_demo::despawn_home_demo)
@@ -40,6 +47,7 @@ impl Plugin for DemoPlugin {
                 conveyor_belt_demo::despawn_conveyor_belt_demo,
             )
             .add_systems(OnExit(DemoState::Magnet), magnet_demo::despawn_magnet_demo)
+            .add_systems(OnExit(DemoState::Joint), joint_demo::despawn_joint_demo)
             .add_systems(
                 OnExit(DemoState::Destructible),
                 destructible_demo::despawn_destructible_demo,

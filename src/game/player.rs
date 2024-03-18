@@ -61,8 +61,8 @@ pub fn spawn_player(mut commands: Commands) {
         RigidBody::Dynamic,
         Collider::capsule(5.0, 5.0),
         GravityScale(0.0),
-        LinearDamping(0.6),
-        AngularDamping(0.25),
+        LinearDamping(0.75),
+        AngularDamping(0.35),
         DebugRender::default().with_collider_color(Color::RED),
     ));
 }
@@ -87,7 +87,7 @@ pub fn handle_player_input(
             .xy();
 
         let (mut player_impulse, _) = player_query.single_mut();
-        player_impulse.apply_impulse(axis_pair * 2500.0);
+        player_impulse.apply_impulse(axis_pair * 4000.0);
     }
 
     if action_state.just_pressed(&PlayerAction::SpinCW) {
