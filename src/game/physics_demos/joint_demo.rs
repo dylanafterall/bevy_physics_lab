@@ -139,6 +139,104 @@ pub fn spawn_joint_demo(mut commands: Commands) {
                 .with_compliance(0.001),
         );
     });
+
+    // revolute rope -----------------------------------------------------------
+    let numi = 20; // number of bodies connected by joints
+    let spacing = 5.0;
+    let mut start_pos = Vec2::new(50.0, -20.0); // position of top body in rope
+
+    let mut body_entities = Vec::new();
+
+    for i in 0..numi {
+        let fi = i as f32;
+
+        let (rigid_body, color) = if i == 0 {
+            (RigidBody::Static, Color::WHITE)
+        } else {
+            (RigidBody::Dynamic, Color::YELLOW)
+        };
+
+        let child_entity = commands
+            .spawn((
+                JointDemo,
+                rigid_body,
+                Collider::circle(1.5),
+                TransformBundle::from_transform(Transform::from_xyz(
+                    start_pos.x,
+                    start_pos.y - (fi * spacing),
+                    0.0,
+                )),
+                DebugRender {
+                    axis_lengths: Some(Vec2::new(1.0, 1.0)),
+                    collider_color: Some(color),
+                    ..default()
+                },
+            ))
+            .id();
+
+        // joint
+        if i > 0 {
+            let parent_entity = *body_entities.last().unwrap();
+            commands.entity(child_entity).with_children(|cmd| {
+                cmd.spawn(
+                    RevoluteJoint::new(parent_entity, child_entity)
+                        .with_local_anchor_2(Vec2::new(0.0, spacing))
+                        .with_angle_limits(-0.25 - fi * 0.1, 0.25 + fi * 0.1)
+                        .with_compliance(0.000001),
+                );
+            });
+        }
+
+        body_entities.push(child_entity);
+    }
+
+    // distance rope -----------------------------------------------------------
+    start_pos = Vec2::new(90.0, -20.0); // position of top body in rope
+
+    body_entities.clear();
+
+    for i in 0..numi {
+        let fi = i as f32;
+
+        let (rigid_body, color) = if i == 0 {
+            (RigidBody::Static, Color::WHITE)
+        } else {
+            (RigidBody::Dynamic, Color::FUCHSIA)
+        };
+
+        let child_entity = commands
+            .spawn((
+                JointDemo,
+                rigid_body,
+                Collider::circle(1.5),
+                TransformBundle::from_transform(Transform::from_xyz(
+                    start_pos.x,
+                    start_pos.y - (fi * spacing),
+                    0.0,
+                )),
+                DebugRender {
+                    axis_lengths: Some(Vec2::new(1.0, 1.0)),
+                    collider_color: Some(color),
+                    ..default()
+                },
+            ))
+            .id();
+
+        // joint
+        if i > 0 {
+            let parent_entity = *body_entities.last().unwrap();
+            commands.entity(child_entity).with_children(|cmd| {
+                cmd.spawn(
+                    DistanceJoint::new(parent_entity, child_entity)
+                        .with_rest_length(spacing)
+                        .with_limits(0.5, spacing)
+                        .with_compliance(0.000001),
+                );
+            });
+        }
+
+        body_entities.push(child_entity);
+    }
 }
 
 pub fn despawn_joint_demo(mut commands: Commands, demo_query: Query<Entity, With<JointDemo>>) {

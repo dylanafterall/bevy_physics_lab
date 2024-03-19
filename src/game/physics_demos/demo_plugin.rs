@@ -56,6 +56,7 @@ impl Plugin for DemoPlugin {
             .add_systems(
                 Update,
                 (
+                    home_demo::handle_kinematic_platforms.run_if(in_state(DemoState::Home)),
                     colliders_demo::rotate_gravity.run_if(in_state(DemoState::Colliders)),
                     conveyor_belt_demo::handle_belt_collisions
                         .run_if(in_state(DemoState::ConveyorBelt)),
@@ -70,7 +71,7 @@ impl Plugin for DemoPlugin {
             // PostProcessCollisions -------------------------------------------
             .add_systems(
                 PostProcessCollisions,
-                (conveyor_belt_demo::one_way_platform.run_if(in_state(DemoState::ConveyorBelt)),),
+                (home_demo::one_way_platform.run_if(in_state(DemoState::Home)),),
             );
     }
 }
